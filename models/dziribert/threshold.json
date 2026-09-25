@@ -1,0 +1,51 @@
+{
+  "PROMPT_INJECTION_CONF_THRESHOLD": 0.6,
+  "PROMPT_INJECTION_MIN_MARGIN": 0.2,
+  "OOD_ENTROPY_THRESHOLD": 0.6,
+  "_calibration_meta": {
+    "PROMPT_INJECTION_CONF_THRESHOLD": {
+      "name": "PROMPT_INJECTION_confidence",
+      "chosen_value": 0.6,
+      "objective_at_chosen": 0.9897,
+      "objective_name": "f1",
+      "n_validation": 1546,
+      "swept_range": [
+        0.5,
+        0.99
+      ],
+      "notes": "MANUAL_OVERRIDE: only 49 validation positives — no reliable interior optimum, same pattern as the Intent Agent's SENSITIVE/INJECTION gates | [ORIGINAL SWEEP] chosen=0.5, objective=f1=0.9897, notes=DEGENERATE: chosen value sits at the floor of the swept range (0.5) — validation set likely has too few confidently-wrong examples to constrain this threshold above the floor. Treat this as 'no reliable gate learned', not as a confirmed optimum; consider a manually-set floor for production instead of trusting this value as-is."
+    },
+    "PROMPT_INJECTION_MIN_MARGIN": {
+      "name": "PROMPT_INJECTION_margin",
+      "chosen_value": 0.2,
+      "objective_at_chosen": 0.9897,
+      "objective_name": "f1",
+      "n_validation": 1546,
+      "swept_range": [
+        0.1,
+        0.6
+      ],
+      "notes": "MANUAL_OVERRIDE: same as PROMPT_INJECTION_CONF_THRESHOLD — see note above | [ORIGINAL SWEEP] chosen=0.1, objective=f1=0.9897, notes=DEGENERATE: chosen value sits at the floor of the swept range (0.1) — validation set likely has too few confidently-wrong examples to constrain this threshold above the floor. Treat this as 'no reliable gate learned', not as a confirmed optimum; consider a manually-set floor for production instead of trusting this value as-is."
+    },
+    "OOD_ENTROPY_THRESHOLD": {
+      "name": "OOD_ENTROPY_THRESHOLD",
+      "chosen_value": 0.6,
+      "objective_at_chosen": 0.0,
+      "objective_name": "youden_j (TPR_wrong - FPR_correct)",
+      "n_validation": 2814,
+      "swept_range": [
+        0.1039720770839918,
+        0.6792842369487464
+      ],
+      "notes": "MANUAL_OVERRIDE: only 1 wrong prediction(s) in the combined 2814-row pool — not enough errors to locate a real entropy boundary, same degeneracy pattern as the PROMPT_INJECTION conf/margin gates | [ORIGINAL SWEEP] chosen=0.104, objective=youden_j (TPR_wrong - FPR_correct)=0.0, notes=max_entropy=ln(2)=0.6931 nats | n_wrong_examples=1 | UNRELIABLE: only 1 wrong predictions in validation (< min_wrong_examples=30) — Youden's J calibrated on this few errors is noisy; do not trust this threshold as a confident production value without a larger or harder validation set. | DEGENERATE: chosen value sits at the floor of the swept range (0.1040) — consider raising floor_fraction further or treating this as 'no reliable OOD boundary learned'."
+    }
+  },
+  "calibrated_at_utc": "2026-07-14T19:51:39Z",
+  "_extra_meta": {
+    "calibrated_on": "layer1_validation.csv (PROMPT_INJECTION gates) + layer1_validation.csv+dev_osact.csv combined pool (OOD entropy gate)",
+    "n_validation": 1546,
+    "n_dev_osact": 1268,
+    "backbone": "alger-ia/dziribert",
+    "num_labels": 2
+  }
+}

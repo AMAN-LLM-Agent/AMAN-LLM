@@ -1,0 +1,10 @@
+{
+  "id2label": {
+    "0": "safe",
+    "1": "prompt_injection"
+  },
+  "label2id": {
+    "safe": 0,
+    "prompt_injection": 1
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "SENSITIVE_MIN_CONF": 0.65,
+  "SENSITIVE_MIN_MARGIN": 0.2,
+  "INJECTION_MIN_CONF": 0.65,
+  "INJECTION_MIN_MARGIN": 0.2,
+  "OOD_ENTROPY_THRESHOLD": 0.2079,
+  "_calibration_meta": {
+    "SENSITIVE_MIN_CONF": {
+      "name": "SENSITIVE_confidence",
+      "chosen_value": 0.65,
+      "objective_at_chosen": 0.9722,
+      "objective_name": "f1",
+      "n_validation": 1546,
+      "swept_range": [
+        0.5,
+        0.99
+      ],
+      "notes": "MANUAL_OVERRIDE: only 37 validation positives, model already near-perfect (AAAC test F1=0.94) — no reliable interior optimum exists | [ORIGINAL SWEEP] chosen=0.5, objective=f1=0.9722, notes=DEGENERATE: chosen value sits at the floor of the swept range (0.5) — validation set likely has too few confidently-wrong examples to constrain this threshold above the floor. Treat this as 'no reliable gate learned', not as a confirmed optimum; consider a manually-set floor for production instead of trusting this value as-is."
+    },
+    "SENSITIVE_MIN_MARGIN": {
+      "name": "SENSITIVE_margin",
+      "chosen_value": 0.2,
+      "objective_at_chosen": 0.9722,
+      "objective_name": "f1",
+      "n_validation": 1546,
+      "swept_range": [
+        0.1,
+        0.6
+      ],
+      "notes": "MANUAL_OVERRIDE: same as SENSITIVE_MIN_CONF — see note above | [ORIGINAL SWEEP] chosen=0.1, objective=f1=0.9722, notes=DEGENERATE: chosen value sits at the floor of the swept range (0.1) — validation set likely has too few confidently-wrong examples to constrain this threshold above the floor. Treat this as 'no reliable gate learned', not as a confirmed optimum; consider a manually-set floor for production instead of trusting this value as-is."
+    },
+    "INJECTION_MIN_CONF": {
+      "name": "INJECTION_confidence",
+      "chosen_value": 0.65,
+      "objective_at_chosen": 0.9897,
+      "objective_name": "f1",
+      "n_validation": 1546,
+      "swept_range": [
+        0.5,
+        0.99
+      ],
+      "notes": "MANUAL_OVERRIDE: only 49 validation positives, model already near-perfect (AAAC test F1=0.99) — no reliable interior optimum exists | [ORIGINAL SWEEP] chosen=0.5, objective=f1=0.9897, notes=DEGENERATE: chosen value sits at the floor of the swept range (0.5) — validation set likely has too few confidently-wrong examples to constrain this threshold above the floor. Treat this as 'no reliable gate learned', not as a confirmed optimum; consider a manually-set floor for production instead of trusting this value as-is."
+    },
+    "INJECTION_MIN_MARGIN": {
+      "name": "INJECTION_margin",
+      "chosen_value": 0.2,
+      "objective_at_chosen": 0.9897,
+      "objective_name": "f1",
+      "n_validation": 1546,
+      "swept_range": [
+        0.1,
+        0.6
+      ],
+      "notes": "MANUAL_OVERRIDE: same as INJECTION_MIN_CONF — see note above | [ORIGINAL SWEEP] chosen=0.1, objective=f1=0.9897, notes=DEGENERATE: chosen value sits at the floor of the swept range (0.1) — validation set likely has too few confidently-wrong examples to constrain this threshold above the floor. Treat this as 'no reliable gate learned', not as a confirmed optimum; consider a manually-set floor for production instead of trusting this value as-is."
+    },
+    "OOD_ENTROPY_THRESHOLD": {
+      "name": "OOD_ENTROPY_THRESHOLD",
+      "chosen_value": 0.2079,
+      "objective_at_chosen": 0.1031,
+      "objective_name": "youden_j (TPR_wrong - FPR_correct)",
+      "n_validation": 2814,
+      "swept_range": [
+        0.2079441541679836,
+        1.3585684738974928
+      ],
+      "notes": "max_entropy=ln(4)=1.3863 nats | n_wrong_examples=144 | DEGENERATE: chosen value sits at the floor of the swept range (0.2079) — consider raising floor_fraction further or treating this as 'no reliable OOD boundary learned'."
+    }
+  },
+  "calibrated_at_utc": "2026-07-16T20:09:47Z",
+  "_extra_meta": {
+    "calibrated_on": "layer1_validation.csv (SENSITIVE/INJECTION gates) + layer1_validation.csv+dev_osact.csv combined pool (OOD entropy gate)",
+    "n_validation": 1546,
+    "n_dev_osact": 1268,
+    "backbone": "UBC-NLP/MARBERTv2",
+    "num_labels": 4
+  }
+}

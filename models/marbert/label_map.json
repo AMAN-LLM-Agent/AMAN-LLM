@@ -1,0 +1,14 @@
+{
+  "id2label": {
+    "0": "safe",
+    "1": "hate_speech",
+    "2": "prompt_injection",
+    "3": "sensitive_request"
+  },
+  "label2id": {
+    "safe": 0,
+    "hate_speech": 1,
+    "prompt_injection": 2,
+    "sensitive_request": 3
+  }
+}
