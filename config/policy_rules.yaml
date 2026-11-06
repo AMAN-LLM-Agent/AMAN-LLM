@@ -1,0 +1,1507 @@
+
+# config/policy_rules.yaml
+# AMAN-LLM · Layer 1 · Agent 3 — Cultural Filter — Rule Base
+
+#
+# PURPOSE
+
+# This file serves two roles:
+#   1. REFERENCE  — Documents all 61 static rules compiled in _RAW_RULES
+#                   for full auditability and human review.
+#   2. EXTENSION  — 'cultural_filter_extended' section is loaded at runtime
+#                   by cultural_filter._load_yaml_rules() to add NEW rules
+#                   without touching cultural_filter.py.
+#
+# HOW TO USE
+
+#   Add a new rule  → append entry under cultural_filter_extended
+#   Disable a rule  → this file does not disable static rules;
+#                     use CategoryConfig(dialect_slur=False) at call time.
+#   Hot-reload      → call cultural_filter.reload_yaml_rules() at runtime
+#
+# FIELD REFERENCE
+-
+#   id                        str   — unique ID (use YAML-XXX-NNN for new rules)
+#   category                  str   — SensitivityCategory value (see enum)
+#   pattern                   str   — Python regex (IGNORECASE + UNICODE applied)
+#   severity                  str   — 'hard' | 'soft'
+#   jurisdiction              str   — 'ALL' | 'Algeria' | 'Morocco' | 'MENA'
+#   weight                    float — hard ≥ 0.8 triggers BLOCK; soft 0.3–0.6
+#   explanation               str   — human-readable description
+#   enabled_flag              str   — CategoryConfig attribute to check
+#   require_hostility_context bool  — only fire alongside hostility context
+#   context_immune            bool  — bypass context multipliers (always BLOCK)
+#
+# SCORING THRESHOLDS  (defined in cultural_filter.py)
+# ---------------------------------------------------
+#   Any hard rule match       → instant BLOCK
+#   Soft accumulated ≥ 0.80   → BLOCK
+#   Soft accumulated ≥ 0.25   → SOFT flag
+#   Soft accumulated < 0.25   → ALLOW
+
+
+
+# CONTEXT-IMMUNE RULES
+# These rules always fire at full weight — condemnation/educational context
+# does NOT reduce their score. Defined in CONTEXT_IMMUNE_RULES frozenset.
+
+# EXT-004, GEN-004, HON-001, HON-002, MIX-EXT-001, MIX-EXT-002, MIX-EXT-003, POL-009, SEM-004, SHA-001, TAB-003
+
+
+
+# STATIC RULES REFERENCE  (61 rules — exact copy of _RAW_RULES)
+
+static_rules_reference:
+
+  
+  # Section: 1. Religious Sensitivity
+  
+  - id:                        REL-001
+    category:                  religious_sensitivity
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              religious_sensitivity
+    explanation:               "Direct insult targeting God, the Prophet, or the Quran."
+    pattern: >-
+      (سب|شتم|قذف|إهانة)\s*(الله|الرب|النبي|الرسول|القرآن|الإسلام|محمد)
+
+  - id:                        REL-002
+    category:                  religious_sensitivity
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              religious_sensitivity
+    explanation:               "Blanket condemnation of Islam / Muslims as terrorists."
+    pattern: >-
+      (الإسلام\s*(دين\s*)?إرهاب|المسلمون\s*إرهابيون|القرآن\s*يعلم\s*القتل)
+
+  - id:                        REL-003
+    category:                  sectarian_incitement
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              sectarian_incitement
+    explanation:               "Sectarian incitement against Shia Muslims."
+    pattern: >-
+      (الشيعة|الرافضة|الصفويون)\s*(كفار|مشركون|يجب\s*قتلهم|أعداء\s*الإسلام)
+
+  - id:                        REL-004
+    category:                  sectarian_incitement
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              sectarian_incitement
+    explanation:               "Sectarian incitement against Sunni / Salafi Muslims."
+    pattern: >-
+      (السنة|الوهابيون|الإخوان)\s*(كفار|مشركون|يجب\s*قتلهم)
+
+  - id:                        REL-005
+    category:                  religious_sensitivity
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    0.9
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              religious_sensitivity
+    explanation:               "Requesting guidance on apostasy from Islam (bidirectional intent detection)."
+    pattern: >-
+      (ارتداد|ال?ردة|مرتد|خرج\s*من\s*الإسلام).{0,30}(كيف|اشرح|شرح|طريقة|أريد)|(كيف|اشرح|شرح|طريقة|أريد).{0,30}(ارتداد|ال?ردة|مرتد|الخروج\s*من\s*الإسلام)
+
+  - id:                        REL-006
+    category:                  religious_sensitivity
+    severity:                  soft
+    jurisdiction:              ALL
+    weight:                    0.5
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              religious_sensitivity
+    explanation:               "Dismissive / derogatory framing of Islamic practice."
+    pattern: >-
+      (الإسلام\s*متخلف|الدين\s*(خرافة|كذب|أفيون)|الصلاة\s*مضيعة\s*وقت)
+
+  - id:                        REL-007
+    category:                  religious_sensitivity
+    severity:                  soft
+    jurisdiction:              ALL
+    weight:                    0.3
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              religious_sensitivity
+    explanation:               "Takfiri labelling language — context-dependent risk."
+    pattern: >-
+      (?<![ء-ي])(كفر|تكفير|كافر|مشرك|زنديق|ملحد)(?![ء-ي])
+
+  - id:                        REL-008
+    category:                  religious_sensitivity
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              religious_sensitivity
+    explanation:               "Request for or mention of a fatwa authorising killing/violence."
+    pattern: >-
+      (فتوى\s*(ضد|لقتل|لإعدام)|حلال\s*دم)
+
+  - id:                        REL-009
+    category:                  religious_sensitivity
+    severity:                  soft
+    jurisdiction:              ALL
+    weight:                    0.4
+    context_immune:            false
+    require_hostility_context: true
+    enabled_flag:              religious_sensitivity
+    explanation:               "Arabizi transliteration of religious insult / takfiri terms."
+    pattern: >-
+      \b(sab|chtem|kofr|takfir|mochrik|zindik)\b
+
+  
+  # Section: 2. Political Sensitivity
+  
+  - id:                        POL-001
+    category:                  political_sensitivity
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.9
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              political_sensitivity
+    explanation:               "Incitement to overthrow Algerian military/state institutions."
+    pattern: >-
+      (الجيش\s*(جزائري\s*)?(يجب\s*)?إسقاط|أسقط\s*النظام|إسقاط\s*النظام|الجيش\s*قتل\s*الشعب)
+
+  - id:                        POL-002
+    category:                  political_sensitivity
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.95
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              political_sensitivity
+    explanation:               "Calls for Algerian territorial separatism (Kabylie / South)."
+    pattern: >-
+      (استقلال|انفصال|تقسيم)\s*(القبائل|الأمازيغ|منطقة\s*القبائل|الجنوب\s*الجزائري)
+
+  - id:                        POL-003
+    category:                  political_sensitivity
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.5
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              political_sensitivity
+    explanation:               "Sensitive references to Algeria's Civil War / security services."
+    pattern: >-
+      (العشرية\s*السوداء|الجيش\s*هو\s*الإرهاب|DRS\s*قتل|الإرهاب\s*دولة)
+
+  - id:                        POL-004
+    category:                  state_institution_attack
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.85
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              state_institution_attack
+    explanation:               "Personal incitement against Algerian head of state or generals."
+    pattern: >-
+      (tebboune|الرئيس\s*تبون|الجنرالات)\s*(كذاب|سارق|قاتل|فاسد|يجب\s*(قتله|إسقاطه))
+
+  - id:                        POL-005
+    category:                  political_sensitivity
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.4
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              political_sensitivity
+    explanation:               "Framing of the Hirak movement as terrorist/treasonous."
+    pattern: >-
+      (الحراك|hirak)\s*.{0,20}(إرهاب|عملاء|مدفوع|خيانة)
+
+  - id:                        POL-006
+    category:                  political_sensitivity
+    severity:                  soft
+    jurisdiction:              MENA
+    weight:                    0.5
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              political_sensitivity
+    explanation:               "Inflammatory Algeria-Morocco territorial rhetoric."
+    pattern: >-
+      (المغرب\s*عدو|المغرب\s*يجب\s*(ضربه|تدميره)|الصحراء\s*(مغربية|جزائرية)\s*حتماً)
+
+  - id:                        POL-007
+    category:                  political_sensitivity
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.8
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              political_sensitivity
+    explanation:               "Violent anti-French incitement beyond historical discourse."
+    pattern: >-
+      (فرنسا\s*(استعمار|احتلال|يجب\s*الانتقام)\s*الآن|الفرنسيون\s*يجب\s*(طردهم|قتلهم))
+
+  - id:                        POL-008
+    category:                  political_sensitivity
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.45
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              political_sensitivity
+    explanation:               "Arabizi political incitement vocabulary."
+    pattern: >-
+      \b(yesqot|isqat|nizam|dawla\s*fassida|jich\s*qatil)\b
+
+  
+  # Section: 3. Extremist Propaganda
+  
+  - id:                        EXT-001
+    category:                  extremist_propaganda
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              extremist_propaganda
+    explanation:               "Endorsement of designated terrorist organisations."
+    pattern: >-
+      (داعش|ISIS|ISIL|تنظيم\s*الدولة|القاعدة|جبهة\s*النصرة)\s*(محق|صح|على\s*حق|يجب\s*نصرته)
+
+  - id:                        EXT-002
+    category:                  extremist_propaganda
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              extremist_propaganda
+    explanation:               "Violent jihad incitement / martyrdom recruitment language."
+    pattern: >-
+      (الجهاد\s*(ضد\s*(الكفار|الغرب|فرنسا))|اذبح\s*الكافر|الاستشهاد\s*في\s*سبيل)
+
+  - id:                        EXT-003
+    category:                  extremist_propaganda
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    0.95
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              extremist_propaganda
+    explanation:               "Pledge of allegiance / caliphate proclamation language."
+    pattern: >-
+      (بيعة|مبايعة|ال?خلافة\s*الإسلامية\s*(قريبة|ستقوم)|ال?خلافة\s*(ستقوم|قريبة|الإسلامية)|أمير\s*المؤمنين\s*(البغدادي|الجولاني))
+
+  - id:                        EXT-004
+    category:                  extremist_propaganda
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            true
+    require_hostility_context: false
+    enabled_flag:              extremist_propaganda
+    explanation:               "Request for weapons manufacturing or suicide-attack recruitment."
+    pattern: >-
+      (كيف\s*(أصنع|أحصل\s*على|أفجر|أفجير)|مواد\s*متفجرة|صنع\s*قنبلة|تجنيد\s*انتحاري)
+
+  - id:                        EXT-005
+    category:                  extremist_propaganda
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.6
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              extremist_propaganda
+    explanation:               "Algeria-specific historical armed group names."
+    pattern: >-
+      \b(GIA|GSPC|AIS|جماعة\s*الجهاد|السلفية\s*للدعوة\s*والقتال)\b
+
+  - id:                        EXT-006
+    category:                  extremist_propaganda
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              extremist_propaganda
+    explanation:               "Arabizi/Latin extremist propaganda vocabulary."
+    pattern: >-
+      \b(jihad\s*(kafir|gharb)|bay3a|khilafa|daesh\s*(haq|sahih|mzyan))\b
+
+  
+  # Section: 3b. Multilingual Extremist Endorsement
+  
+  - id:                        MIX-EXT-001
+    category:                  extremist_propaganda
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            true
+    require_hostility_context: false
+    enabled_flag:              extremist_propaganda
+    explanation:               "Multilingual extremist endorsement: endorsement verb (any script) within 12 characters of a named terrorist entity."
+    pattern: >-
+      (?i)\b(support|i\s*support|ana\s*support|pro|with|نساند|ندعم|مع|أؤيد|nsrd|m3ahum|soutiens|pour)\b.{0,12}(داعش|isis|isil|daesh|تنظيم\s*الدولة|القاعدة|al.?qaeda|jbhat\s*nnusra|بوكو\s*حرام|boko\s*haram)
+
+  - id:                        MIX-EXT-002
+    category:                  extremist_propaganda
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            true
+    require_hostility_context: false
+    enabled_flag:              extremist_propaganda
+    explanation:               "Multilingual extremist endorsement: entity named before endorsement verb."
+    pattern: >-
+      (?i)(داعش|isis|isil|daesh|تنظيم\s*الدولة|القاعدة|al.?qaeda).{0,12}\b(support|pro|with|أؤيد|ندعم|نساند|m3ahum|soutiens)\b
+
+  - id:                        MIX-EXT-003
+    category:                  extremist_propaganda
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            true
+    require_hostility_context: false
+    enabled_flag:              extremist_propaganda
+    explanation:               "Arabizi extremist endorsement using transliterated entity names."
+    pattern: >-
+      (?i)\b(support|nsrd|n9awwi|m3ahum|w9ftlhom|ana\s*m3a|je\s*soutiens|pour\s*daesh)\b.{0,20}\b(da3esh|da3ich|daesh|daesch|qa3ida|tanzim\s*dawla|khilafa)\b
+
+  
+  # Section: 4. Family Honor Insults
+  
+  - id:                        HON-001
+    category:                  family_honor_insult
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            true
+    require_hostility_context: false
+    enabled_flag:              family_honor_insult
+    explanation:               "Grave insult targeting the user's or target's mother."
+    pattern: >-
+      (أمك|أم\s*[أبتثجحخدذرزسشصضطظعغفقكلمنهوي]+|يماك|يما\s*\w+)\s*(قحبة|شرموطة|زانية|عاهرة|فاجرة)
+
+  - id:                        HON-002
+    category:                  family_honor_insult
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            true
+    require_hostility_context: false
+    enabled_flag:              family_honor_insult
+    explanation:               "Sexual insult targeting sister or female sibling."
+    pattern: >-
+      (أختك|خوتك|أختي\s*\w+|sœur)\s*(قحبة|شرموطة|زانية|تنيك|تتناك)
+
+  - id:                        HON-003
+    category:                  family_honor_insult
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.9
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              family_honor_insult
+    explanation:               "Honor/shame attack targeting family dignity (sharaf/namouss)."
+    pattern: >-
+      (عرضك|شرفك|عيالك|ناموسك)\s*(ماشي|ما\s*عندكش|راح|ولا\s*بنت)
+
+  - id:                        HON-004
+    category:                  family_honor_insult
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    0.95
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              family_honor_insult
+    explanation:               "Illegitimacy / family origin insult."
+    pattern: >-
+      (ولد\s*الحرام|ابن\s*(القحبة|الشرموطة|الزانية)|بنت\s*(الكلب|الحرام))
+
+  - id:                        HON-005
+    category:                  family_honor_insult
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              family_honor_insult
+    explanation:               "French-language family honor insult (Francarabe code-switch)."
+    pattern: >-
+      (ta\s*mère|votre\s*mère|ton\s*père)\s*(pute|chien|bâtard|salope)
+
+  - id:                        HON-006
+    category:                  family_honor_insult
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.9
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              family_honor_insult
+    explanation:               "Arabizi family honour attack."
+    pattern: >-
+      \b(3irdhak|3ardhak|3erdhou|namoussak|chrafak)\s*(ma3ndouch|rach|walo)\b
+
+  
+  # Section: 5. Dialect Slurs
+  
+  - id:                        SLR-001
+    category:                  dialect_slur
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.95
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              ethnic_sensitivity
+    explanation:               "Ethnically derogatory slur targeting Algerian Berber / regional groups."
+    pattern: >-
+      (?<![ء-ي])(قبايلي|أمازيغي|شاوي|ميزابي|طارقي|جنوبي)(?![ء-ي]).{0,15}(قرد|بربري\s*وسخ|كافر|حقير|ما\s*يصلحش)
+
+  - id:                        SLR-002
+    category:                  dialect_slur
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.9
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              dialect_slur
+    explanation:               "Reverse ethnic slur targeting Arab Algerians."
+    pattern: >-
+      (?<![ء-ي])(عربي\s*(وسخ|بدوي\s*حقير|أهبل)|حراكي\s*(كلب|حيوان))(?![ء-ي])
+
+  - id:                        SLR-003
+    category:                  dialect_slur
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              dialect_slur
+    explanation:               "Crude Darja sexual slur / obscene Darja verb."
+    pattern: >-
+      (?<![ء-ي])(حريفة|زريڤة|كونار|قاحبة|قحبة|شرموطة|روحي\s*نيكي|نيك)(?![ء-ي])
+
+  - id:                        SLR-004
+    category:                  dialect_slur
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.4
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              dialect_slur
+    explanation:               "Darja dehumanising or gender-derogatory slur."
+    pattern: >-
+      (?<![ء-ي])(مكوة|مخنث|زطلة|حيوان\s*(أنت|هو|هي))(?![ء-ي])
+
+  - id:                        SLR-005
+    category:                  dialect_slur
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              dialect_slur
+    explanation:               "Arabizi Darja sexual slur."
+    pattern: >-
+      \b(khouya\s*9ahba|ntiya\s*kahba|roh\s*tnik|ya\s*sharmouta)\b
+
+  
+  # Section: 6. Taboo Phrases
+  
+  - id:                        TAB-001
+    category:                  taboo_phrase
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.55
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              taboo_phrase
+    explanation:               "Request for instructions to obtain alcohol/drugs in Algeria."
+    pattern: >-
+      (كيف\s*(أشرب\s*(خمر|كحول)|أتعاطى\s*حشيش|أحصل\s*على\s*مخدرات)\s*في\s*الجزائر)
+
+  - id:                        TAB-002
+    category:                  taboo_phrase
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    0.85
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              taboo_phrase
+    explanation:               "Framing of sexual prohibitions as permissible in Islamic context."
+    pattern: >-
+      (الزنا|الفاحشة|اللواط)\s*(حلال|مباح|ليس\s*حراما|يجوز)
+
+  - id:                        TAB-003
+    category:                  taboo_phrase
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    1.0
+    context_immune:            true
+    require_hostility_context: false
+    enabled_flag:              taboo_phrase
+    explanation:               "Soliciting prostitution in Algerian cities."
+    pattern: >-
+      (كيف\s*أمارس\s*الجنس|أين\s*أجد\s*(عاهرة|قحبة)\s*في\s*(الجزائر|وهران|قسنطينة))
+
+  - id:                        TAB-004
+    category:                  taboo_phrase
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.35
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              taboo_phrase
+    explanation:               "Public Ramadan fast-breaking — sensitive in Algerian law context."
+    pattern: >-
+      (الأكل\s*في\s*رمضان\s*علنا|أكل\s*في\s*الشارع\s*رمضان|كسر\s*الصيام\s*أمام\s*الناس)
+
+  - id:                        TAB-005
+    category:                  taboo_phrase
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.9
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              taboo_phrase
+    explanation:               "Arabizi request for prostitution / drugs / forbidden acts."
+    pattern: >-
+      \b(win\s*nl9a\s*9ahba|kifah\s*ndir\s*(zina|liwat)|hachich\s*win\s*nchrih)\b
+
+  
+  # Section: 7. Social Shame / Honor Triggers
+  
+  - id:                        SHA-001
+    category:                  social_shame_trigger
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            true
+    require_hostility_context: false
+    enabled_flag:              social_shame_trigger
+    explanation:               "Non-consensual intimate image sharing (sextortion / revenge porn)."
+    pattern: >-
+      (انشر|سأنشر|سوف\s*أنشر)\s*(صورة|صور|فيديو|صورك)\s*(بدون\s*إذن|سراً|مسرب|الخاصة|خاصة|عارية)?
+
+  - id:                        SHA-002
+    category:                  social_shame_trigger
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    0.85
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              social_shame_trigger
+    explanation:               "Blackmail / public shaming threat (includes attached pronouns سأفضحك)."
+    pattern: >-
+      (افضح|سأفضح\S*|سأنشر\s*سرك|سأكشف\s*(فضيحتك|أسرارك))
+
+  - id:                        SHA-003
+    category:                  social_shame_trigger
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.3
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              social_shame_trigger
+    explanation:               "Shame-lexicon — may indicate context of social coercion."
+    pattern: >-
+      (?<![ء-ي])(فاضح|فضيحة|فضيحتك|عيب\s*عليك|حشوما|حشومة|hhachuma)(?![ء-ي])
+
+  
+  # Section: 8. Regional Sensitivities
+  
+  - id:                        REG-001
+    category:                  regional_sensitivity
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.85
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              regional_sensitivity
+    explanation:               "Inter-wilaya collective defamation of Algerian city / inhabitants."
+    pattern: >-
+      (وهران|قسنطينة|عنابة|تيزي\s*وزو|بجاية|بشار|تمنراست)\s*(حقيرة|وسخة|أهلها\s*(بدو|قرود|جاهلين))
+
+  - id:                        REG-002
+    category:                  regional_sensitivity
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.9
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              regional_sensitivity
+    explanation:               "Dehumanisation of Algerian Saharan / southern populations."
+    pattern: >-
+      (الجنوب\s*الجزائري\s*(متخلف|صحراوية\s*بدائيين)|أهل\s*(الصحراء|الجنوب)\s*(حيوانات|بلا\s*حضارة))
+
+  - id:                        REG-003
+    category:                  regional_sensitivity
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.9
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              regional_sensitivity
+    explanation:               "Incitement framing Kabylie / Berbers as traitors or anti-Arab."
+    pattern: >-
+      (قبايل\s*(يبيعون\s*الجزائر|عملاء\s*فرنسا|maçons)|أمازيغ\s*يكرهون\s*العرب)
+
+  - id:                        REG-004
+    category:                  regional_sensitivity
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.85
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              regional_sensitivity
+    explanation:               "City or region + derogatory descriptor (e.g. 'وهران مدينة وسخة')."
+    pattern: >-
+      (وهران|قسنطينة|عنابة|تيزي\s*وزو|بجاية|بشار|تمنراست|سطيف|باتنة|الجزائر\s*العاصمة|مستغانم|تلمسان|الجلفة|بسكرة|أدرار|إليزي|برج\s*بوعريريج)\s*(مدينة|بلد|منطقة|ولاية|حي)?\s*.{0,20}(وسخة?|قذرة?|حقيرة?|زبالة|كلاب|بدائية?|ما\s*تصلحش|لا\s*تصلح|خايبة?|زفتة?|نتانة?)
+
+  
+  # Section: 9. Gender Sensitivity
+  
+  - id:                        GEN-001
+    category:                  gender_sensitivity
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    0.8
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              gender_sensitivity
+    explanation:               "Dehumanisation of women / extreme misogynist framing."
+    pattern: >-
+      (المرأة\s*(أقل|أدنى|ناقصة\s*عقل)\s*(من\s*الرجل)?|النساء\s*(لا\s*يصلحن|عبيد|حيوانات))
+
+  - id:                        GEN-002
+    category:                  gender_sensitivity
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    0.95
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              gender_sensitivity
+    explanation:               "Instruction / justification for domestic violence."
+    pattern: >-
+      (كيف\s*أجبر\s*(زوجتي|بنتي|أختي)\s*على|اضرب\s*(زوجتك|المرأة)\s*(إذا|عشان|لأنها))
+
+  - id:                        GEN-003
+    category:                  gender_sensitivity
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.4
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              gender_sensitivity
+    explanation:               "Framing women's rights as apostasy / Western conspiracy."
+    pattern: >-
+      (تحرر\s*المرأة\s*(ضد\s*الإسلام|كفر|مؤامرة\s*غربية)|الفيمينيزم\s*(يدمر|حرام|كفر))
+
+  - id:                        GEN-004
+    category:                  gender_sensitivity
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            true
+    require_hostility_context: false
+    enabled_flag:              gender_sensitivity
+    explanation:               "Direct violence intent query targeting a woman (GEN-004 is context-immune — always BLOCK)."
+    pattern: >-
+      (كيف|طريقة|أريد\s*أن?|كيفاش|comment)\s*(أضرب|أؤذي|أقتل|أعذّب|أجرح|أخنق|اضرب|اقتل|ndreb|nakdeb|nqtel|ndhi)\s*(زوجتي|امرأة|مرا|بنت|أختي|أمي|الست|واحدة\s*مرا|ma\s*femme|une\s*femme|la\s*fille)
+
+  
+  # Section: 10. Ethnic Sensitivity
+  
+  - id:                        ETH-001
+    category:                  ethnic_sensitivity
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              ethnic_sensitivity
+    explanation:               "Antisemitic conspiracy or incitement."
+    pattern: >-
+      (اليهود\s*(يسيطرون|وراء|مؤامرة|يجب\s*(طردهم|قتلهم))|الصهاينة\s*=\s*اليهود)
+
+  - id:                        ETH-002
+    category:                  ethnic_sensitivity
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              ethnic_sensitivity
+    explanation:               "Anti-Black racist dehumanisation."
+    pattern: >-
+      (الزنوج|الكافرون\s*الأفارقة|العبيد\s*الأفارقة|أفارقة\s*(جنوب\s*الصحراء\s*)?قرود)
+
+  - id:                        ETH-003
+    category:                  ethnic_sensitivity
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.5
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              ethnic_sensitivity
+    explanation:               "Harkis — historically charged post-colonial slur in Algeria."
+    pattern: >-
+      (?<![ء-ي])(الحركى|حركي\s*(خائن|كلب)|أبناء\s*الحركى\s*(خونة))(?![ء-ي])
+
+  - id:                        ETH-004
+    category:                  ethnic_sensitivity
+    severity:                  hard
+    jurisdiction:              Algeria
+    weight:                    0.95
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              ethnic_sensitivity
+    explanation:               "Takfiri attack on Amazigh / Berber identity."
+    pattern: >-
+      (الأمازيغ\s*(مش\s*مسلمين|مشركون|أعداء\s*الإسلام)|البربر\s*كفار)
+
+  - id:                        ETH-005
+    category:                  ethnic_sensitivity
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    0.95
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              ethnic_sensitivity
+    explanation:               "Ethnic group + religious condemnation label (e.g. 'الأمازيغ كفار', 'العرب ملحدين')."
+    pattern: >-
+      (الأمازيغ|البربر|العرب|اليهود|المسلمين|المسيحيين|الأفارقة|الأكراد|الفرس|الترك|الأقباط)\s*(كلهم\s*)?(كفار|ملحدين|ملحدون|مشركين|مشركون|زنادقة|كافرون|أنجاس|نجسون|يستحقون\s*اللعنة)
+
+  
+  # Section: 11. Multilingual Obfuscation
+  
+  - id:                        OBF-001
+    category:                  multilingual_obfuscation
+    severity:                  soft
+    jurisdiction:              ALL
+    weight:                    0.55
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              multilingual_obfuscation
+    explanation:               "Leet-speak / character substitution obfuscation of extremist keywords."
+    pattern: >-
+      \b(k[o0]f[a@]r|t[a@]kf[i1]r|j[i1]h[a@]d\s*k[i1]ll|[e3]xplos[i1]v|b[o0]mb)\b
+
+  - id:                        OBF-002
+    category:                  multilingual_obfuscation
+    severity:                  soft
+    jurisdiction:              ALL
+    weight:                    0.4
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              multilingual_obfuscation
+    explanation:               "Zero-width characters used to split sensitive words (obfuscation)."
+    pattern: >-
+      (\u200b|\u200c|\u200d|\u2060|\ufeff)
+
+  - id:                        OBF-003
+    category:                  multilingual_obfuscation
+    severity:                  soft
+    jurisdiction:              ALL
+    weight:                    0.3
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              multilingual_obfuscation
+    explanation:               "Dense code-switching pattern that may indicate obfuscated input."
+    pattern: >-
+      ([a-zA-Z0-9]{1,6}\s+[\u0600-\u06FF]{2,}|\b[\u0600-\u06FF]{2,}\s+[a-zA-Z0-9]{1,6})
+  
+
+
+# EXTENDED RULES  — Add new rules here (loaded at runtime)
+
+# Rules added here extend _RAW_RULES without modifying cultural_filter.py.
+# Naming convention: YAML-{PREFIX}-{NNN}  e.g. YAML-REL-001, YAML-EXT-002
+#
+# To hot-reload in a running process:
+#   from cultural_filter import reload_yaml_rules
+#   reload_yaml_rules(Path('config/policy_rules.yaml'))
+
+
+cultural_filter_extended:
+
+  # [v1.2.3-FIX] YAML-EXT-001 — Armed-jihad recruitment (HARD BLOCK) ────────
+  #
+  # WHY THIS IS NEEDED
+  # The existing static rule EXT-002 covers martyrdom incitement language
+  # ("الجهاد ضد الكفار", "اذبح الكافر"). It does NOT match recruitment-to-
+  # armed-conflict framing like "تجنيد المقاتلين للجهاد المسلح ضد الدولة"
+  # because that phrase lacks the entity targets EXT-002 requires.
+  #
+  # False-negative #34 passed cultural filter entirely (no rule matched),
+  # then got flagged by intent_classifier at conf=0.79 — below the 0.85
+  # single-agent threshold — so it was allowed. This rule closes that gap
+  # by short-circuiting at the cultural layer (0ms, before ML agents run).
+  #
+  # PATTERN DESIGN
+  # Deliberately requires TWO co-present signals to avoid over-blocking:
+  #   • Recruitment verb  : تجنيد / الانضمام / الالتحاق / تجنّد
+  #   • Armed-conflict marker : الجهاد المسلح / القتال المسلح /
+  #                             مقاتلين ضد الدولة / مسلحين ضد
+  # Bare "جهاد" alone (spiritual/educational usage) is intentionally NOT blocked.
+  - id:                        YAML-EXT-001
+    category:                  extremist_propaganda
+    severity:                  hard
+    jurisdiction:              ALL
+    weight:                    1.0
+    context_immune:            true
+    require_hostility_context: false
+    enabled_flag:              extremist_propaganda
+    explanation: >-
+      Armed-jihad recruitment: co-presence of a recruitment verb and an
+      armed-conflict marker (e.g. "تجنيد المقاتلين للجهاد المسلح ضد الدولة").
+      context_immune=true — educational/condemnation framing does not reduce score.
+    pattern: >-
+      (تجنيد|الانضمام\s*إلى|الالتحاق\s*ب|تجنّد)\s*.{0,25}(الجهاد\s*المسلح|القتال\s*المسلح|مقاتلين\s*ضد\s*الدولة|مسلحين\s*ضد|الجهاد\s*المسلح\s*ضد|قتال\s*ضد\s*الدولة)|(الجهاد\s*المسلح|القتال\s*المسلح)\s*.{0,25}(تجنيد|انضم|الالتحاق|مقاتلين)
+
+  # [v1.2.3-FIX] YAML-SHA-001 — "بلا حشمة" family (SOFT) ───────────────────
+  #
+  # WHY THIS IS NEEDED
+  # The orchestrator's SOFT_FLAG path (v1.2-FIX-3) requires cultural_filter to
+  # return label=soft. That happens only when a SOFT-severity rule fires and
+  # accumulated weight ≥ 0.25 (the SOFT threshold in cultural_filter.py).
+  #
+  # Static rule SHA-001 covers "عيب عليك" (weight=0.49 → soft ✓).
+  # But "بلا حشمة" / "بدون حشمة" had no rule, so the filter returned
+  # conf=0.49 as a default-low score → label=safe → SOFT_FLAG logic never entered
+  # → adversarial_detector's jailbreak signal (misfire on Darja phrasing) won
+  # → BLOCK instead of SOFT.
+  #
+  # PATTERN DESIGN
+  # Anchored to the بلا/بدون + حشمة construction. Does NOT match standalone
+  # "حشمة" (modesty noun used positively, e.g. "الحشمة من الإيمان").
+  # Weight=0.6 → accumulated score exceeds 0.25 (SOFT threshold) reliably,
+  # and stays well below 0.80 (BLOCK threshold) to avoid over-blocking.
+  - id:                        YAML-SHA-001
+    category:                  social_shame_trigger
+    severity:                  soft
+    jurisdiction:              Algeria
+    weight:                    0.6
+    context_immune:            false
+    require_hostility_context: false
+    enabled_flag:              social_shame_trigger
+    explanation: >-
+      "Without shame/modesty" construction in Darja/MSA (e.g. "بلا حشمة خالص",
+      "هادا الكلام بدون حشمة"). Routes to SOFT — borderline propriety concern,
+      not a hard violation. Enables SOFT_FLAG orchestrator path for case #38.
+    pattern: >-
+      (بلا\s*حشمة|بدون\s*حشمة|ما\s*عندوش\s*حشمة|كلام\s*بلا\s*حشمة|حديث\s*بلا\s*حشمة|كلام\s*بدون\s*حشمة)
+
+
+  # - id:                        YAML-SLR-001
+  #   category:                  dialect_slur
+  #   pattern:                   '\b(new_term)\b'
+  #   severity:                  soft
+  #   jurisdiction:              Algeria
+  #   weight:                    0.45
+  #   explanation:               "New slur detected in field data"
+  #   enabled_flag:              dialect_slur
+  #   require_hostility_context: false
+  #   context_immune:            false
+
+  # Template: hard block rule ─────────────────────────────────────────────
+  # - id:                        YAML-EXT-001
+  #   category:                  extremist_propaganda
+  #   pattern:                   '(phrase)\s*(على حق|يجب نصرته)'
+  #   severity:                  hard
+  #   jurisdiction:              ALL
+  #   weight:                    1.0
+  #   explanation:               "Endorsement of newly designated entity"
+  #   enabled_flag:              extremist_propaganda
+  #   require_hostility_context: false
+  #   context_immune:            true
+
+
+
+# LAYER 2 — TOOL INVOCATION GOVERNANCE
+# Policy Gate: Permission · Injection · Schema · Privacy · Abuse · SSRF · Exfiltration · Prompt-Leakage
+
+#
+# PURPOSE
+
+# These rules govern what the agent is ALLOWED to do with tools — checked
+# before any tool call is dispatched to the sandbox. Layer 1 governs input
+# intent; Layer 2 governs agent ACTION.
+#
+# RULE STRUCTURE
+
+#   id               str   — unique rule ID (PR-NN)
+#   description      str   — human-readable explanation
+#   tool             str   — target tool name; omit to apply to ALL tools
+#   condition        str   — DSL condition string evaluated by policy_engine.py
+#   action           str   — always BLOCK (engine decides rejection strategy)
+#   violation_type   str   — maps to rejection_strategies section below
+#   severity         str   — 'critical' | 'high' | 'medium'
+#   jurisdiction     str   — 'ALL' | 'Algeria' | 'MENA'
+#
+# CONDITION DSL (evaluated by _matches_rule in policy_engine.py)
+
+#   session_role == 'X'              exact role match
+#   tool_name not in allowed_tools   role-based tool access check
+#   arguments.FIELD contains 'X'    substring match on serialized arguments
+#   arguments.FIELD matches 'REGEX'  regex match on serialized arguments
+#   len(arguments) > N               payload size check (bytes, UTF-8)
+#
+# VIOLATION_TYPE → REJECTION STRATEGY MAPPING
+
+#   permission        → ask      (auth issue, not an attack)
+#   path_traversal    → decline  (attack pattern)
+#   injection         → decline  (attack pattern)
+#   command_injection → decline  (attack pattern)
+#   role_violation    → ask      (suggest allowed tools)
+#   schema_violation  → ask      (user error, request correction)
+#   privacy_violation → decline  (PII/data exfiltration attempt)
+#   abuse             → ask      (rate limit, suggest retry later)
+#   ssrf_attempt      → decline  (internal network probe, always attack)
+#   sensitive_file_access → decline  (secrets/credentials file access)
+#   prompt_leakage    → decline  (system prompt extraction attempt)
+#   data_exfiltration → decline  (bulk DB extraction / UNION SELECT)
+#   token_theft       → decline  (Bearer/API key pattern in arguments)
+
+
+schema_version: "2.1.0"
+
+layer2_rules:
+
+  # PR-02 ─────
+  # Block path traversal sequences in file_read arguments.
+  # Covers plain '../', backslash-style '..\', URL-encoded '%2e%2e', and
+  # Windows-style absolute paths (drive letter + backslashes) used to escape
+  # the sandboxed working directory regardless of the separator/encoding used.
+  # Strategy: DECLINE — immediate rejection, no clarification offered.
+  - id:              PR-02
+    description:     "Block path traversal sequences (../, ..\\, %2e%2e, Windows drive paths) in file_read arguments"
+    tool:            file_read
+    condition:       "arguments.path matches '(?i)(\\.\\.[/\\\\])|(%2e%2e)|(^[A-Za-z]:\\\\)'"
+    action:          BLOCK
+    violation_type:  path_traversal
+    severity:        critical
+    jurisdiction:    ALL
+
+  # PR-04 ─────
+  # Block OS-level shell commands and native/process-escape primitives in
+  # code_interpreter / python_executor scripts. These commands can escape the
+  # sandbox or damage the host environment. Covers common Linux privilege
+  # escalation and filesystem destruction verbs, plus ctypes/CDLL (native code
+  # loading) and os.popen (shell-out via file-like interface).
+  # Strategy: DECLINE — attack pattern, immediate termination.
+  #
+  # FIX (role-sync): extended to cover python_executor (the canonical tool name
+  # in notebook + tool_registry) in addition to the legacy code_interpreter alias.
+  - id:              PR-04
+    description:     "Block OS-level shell commands / native-code escapes in code_interpreter/python_executor (rm, chmod, sudo, ctypes, os.popen, etc.)"
+    tools:
+      - code_interpreter
+      - python_executor
+    condition:       "arguments.script matches '\\brm\\b|\\bchmod\\b|\\bsudo\\b|\\bchown\\b|\\bmkfs\\b|\\bdd\\b|\\bkill\\b|\\bpkill\\b|\\bnc\\b|\\bcurl\\b|\\bwget\\b|\\beval\\b|\\bexec\\b|\\bos\\.system\\b|\\bos\\.popen\\b|\\bsubprocess\\b|\\bctypes\\b|\\bCDLL\\b'"
+    action:          BLOCK
+    violation_type:  command_injection
+    severity:        critical
+    jurisdiction:    ALL
+
+  # PR-13 ─────
+  # Block tool arguments containing Bearer tokens, JWTs, API keys, or
+  # credentials passed as plaintext. Attackers may attempt to exfiltrate
+  # tokens by embedding them in search queries, code payloads, or translation
+  # requests. Patterns: Authorization header values (including bare JWTs),
+  # common API key prefixes (sk-, pk-, ghp_, xoxb-, glpat-, AKIA for AWS), and
+  # private_token/password/api_key/secret_key assignment forms.
+  # Checked BEFORE PR-07 so a credential that happens to contain a long digit
+  # run (e.g. a Slack token's numeric segment) is correctly attributed to
+  # token_theft rather than misclassified as a national-ID PII match.
+  # Applies to ALL tools — a token appearing in any argument is a red flag.
+  # Strategy: DECLINE — credential leakage is a critical security event.
+  - id:              PR-13
+    description:     "Block plaintext credential / API token leakage in any tool argument"
+    condition:       "arguments matches '(?i)(Bearer\\s+[A-Za-z0-9\\-._~+/]+=*|Authorization:\\s*(Basic|Bearer|Token)\\s+\\S+|\\beyJ[A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-]*|\\bsk-[A-Za-z0-9]{20,}|\\bpk-[A-Za-z0-9]{20,}|\\bghp_[A-Za-z0-9]{36}|\\bgho_[A-Za-z0-9]{36}|\\bghs_[A-Za-z0-9]{36}|\\bglpat-[A-Za-z0-9_\\-]{20,}|\\bxoxb-[0-9A-Za-z]+(-[0-9A-Za-z]+)+|\\bAKIA[0-9A-Z]{16}\\b|\\bAIza[0-9A-Za-z\\-_]{35}|password\\s*[=:]+\\s*\\S{8,}|api[_\\-]?key\\s*[=:]+\\s*\\S{8,}|secret[_\\-]?key\\s*[=:]+\\s*\\S{8,}|private[_\\-]?token\\s*[=:]+\\s*\\S{8,})'"
+    action:          BLOCK
+    violation_type:  token_theft
+    severity:        critical
+    jurisdiction:    ALL
+
+  # PR-07 ─────
+  # Block tool calls attempting to exfiltrate Algerian / Arabic PII.
+  # Covers the three most sensitive identifier types in the Algerian context:
+  #   • National ID (رقم التعريف الوطني): 10-digit numeric string
+  #   • Algerian mobile numbers: +213 / 0 followed by 5/6/7 + 8 digits
+  #   • Arabic name + ID co-occurrence: high-confidence exfiltration signal
+  #   • Bulk requests for identity-document numbers ("every passport number…")
+  #     even when no literal digits are present in the request itself.
+  # Applies to ALL tools — a PII pattern in any argument is a red flag.
+  # Jurisdiction: Algeria (pattern tuned to DZ formats; extendable to MENA).
+  # Strategy: DECLINE — data exfiltration attempt, immediate termination.
+  - id:              PR-07
+    description:     "Block Algerian/Arabic PII exfiltration (national ID, phone numbers, name+ID co-occurrence, bulk ID-document requests)"
+    condition:       "arguments matches '\\b\\d{10,12}\\b|\\b(\\+?213|0)(5|6|7)\\d{8}\\b|(?:رقم|هوية|بطاقة).{0,20}\\d{8,12}|\\bevery\\b.{0,20}\\b(passport|national\\s+id|identity)\\s*numbers?\\b'"
+    action:          BLOCK
+    violation_type:  privacy_violation
+    severity:        critical
+    jurisdiction:    Algeria
+
+  # PR-06 ─────
+  # Block oversized / resource-abusive tool call payloads.
+  # Four independent checks, each scoped to the tool where the abuse pattern
+  # is meaningful:
+  #   1. Any call whose total serialised payload exceeds 16 KB (generic cap).
+  #   2. web_fetch/browser/external_request request bodies over 8 KB.
+  #   3. python_executor scripts referencing very large numeric literals
+  #      (7+ digits) — a classic memory-exhaustion / fork-bomb-by-allocation
+  #      pattern that isn't caught by payload size alone.
+  #   4. file_read requests asking to read more than ~1 MB in one call.
+  # Likely user error rather than an attack in most cases.
+  # Strategy: ASK — agent requests the user to simplify or chunk the input.
+  - id:              PR-06
+    description:     "Block oversized tool call payloads (> 16 384 bytes UTF-8)"
+    condition:       "len(arguments) > 16384"
+    action:          BLOCK
+    violation_type:  schema_violation
+    severity:        medium
+    jurisdiction:    ALL
+
+  - id:              PR-06
+    description:     "Block oversized web_fetch/browser/external_request bodies (> 8 000 bytes)"
+    tools:
+      - web_fetch
+      - browser
+      - external_request
+    condition:       "len(arguments.body) > 8000"
+    action:          BLOCK
+    violation_type:  schema_violation
+    severity:        medium
+    jurisdiction:    ALL
+
+  - id:              PR-06
+    description:     "Block python_executor scripts with very large numeric literals (memory-exhaustion pattern)"
+    tools:
+      - code_interpreter
+      - python_executor
+    condition:       "arguments.script matches '\\d{7,}'"
+    action:          BLOCK
+    violation_type:  schema_violation
+    severity:        medium
+    jurisdiction:    ALL
+
+  - id:              PR-06
+    description:     "Block file_read requests asking for more than 1 000 000 bytes in a single call"
+    tool:            file_read
+    condition:       "arguments.max_bytes > 1000000"
+    action:          BLOCK
+    violation_type:  schema_violation
+    severity:        medium
+    jurisdiction:    ALL
+
+  # PR-08 (rate limit) ──────────────────────────────────────────────────
+  # Block excessive tool invocations within a rolling 1-minute window.
+  # Rapid repeated calls are a strong indicator of automated abuse, prompt
+  # flooding, or a runaway agent loop. The threshold (20 calls/min) is generous
+  # enough to allow legitimate multi-step reasoning while catching abuse.
+  # The rate counter is maintained by the policy_engine rate-limiter component
+  # (token-bucket per context_id, reset every 60 s).
+  # Strategy: ASK — agent informs user of the limit and suggests retrying later.
+  # Note: condition uses DSL verb 'rate_exceeds' — evaluated by a dedicated
+  # handler in Gate 0, not a regex match.
+  - id:              PR-08
+    description:     "Block excessive tool calls — rate limit 20 invocations per 60-second window per session"
+    condition:       "tool_calls_per_minute > 20"
+    action:          BLOCK
+    violation_type:  abuse
+    severity:        medium
+    jurisdiction:    ALL
+    rate_limit:
+      window_seconds:  60
+      max_calls:       20
+      counter_key:     context_id        # one bucket per conversation session
+
+  # PR-10 ─────
+  # Block access to files that commonly store secrets, credentials, or keys,
+  # or that live in directories conventionally reserved for private/sensitive
+  # business data. Targets: environment files (.env, .env.*), private keys
+  # (.pem, .key, .p12, .pfx), SSH identity files (id_rsa, id_ed25519),
+  # credential stores (credentials.*, secrets.*, .netrc, .pgpass), Docker
+  # credential/config stores, kubeconfig, shell history (may contain
+  # commands with embedded secrets), and any path under a "private" directory.
+  # Pattern is path-based — checks filename, extension, and directory.
+  # Strategy: DECLINE — secrets access is never a legitimate agent operation.
+  - id:              PR-10
+    description:     "Block access to sensitive files — .env, .pem, .key, id_rsa, credentials.*, secrets.*, kubeconfig, bash_history, docker config, /private/, etc."
+    tool:            file_read
+    condition:       "arguments.path matches '(?i)(\\.env(\\.\\w+)?$|\\.pem$|\\.key$|\\.p12$|\\.pfx$|id_rsa|id_ed25519|id_dsa|\\.ppk$|credentials|secrets|\\.netrc$|\\.pgpass$|kubeconfig|\\.aws/credentials|\\.ssh/|docker-compose\\.ya?ml|\\.docker[/\\\\]|bash_history|/private/|/etc/shadow|/etc/passwd|\\.htpasswd$|token\\.json$|service[-_]?account)'"
+    action:          BLOCK
+    violation_type:  sensitive_file_access
+    severity:        critical
+    jurisdiction:    ALL
+
+  # PR-11 ─────
+  # Block attempts to extract system prompts, governance rules, or hidden
+  # instructions from the agent — both direct extraction phrasing ("reveal
+  # your prompt") AND indirect discovery attempts (searching for documents
+  # describing the assistant's internal policies/configuration/governance,
+  # in English, French, or Arabic/Darja).
+  # Applies to ALL tools — the extraction phrase may appear in any argument.
+  # Arabic patterns: "أظهر التعليمات", "اكشف البرومبت", "ما هي تعليماتك"
+  # Strategy: DECLINE — prompt extraction undermines the entire governance layer.
+  - id:              PR-11
+    description:     "Block system prompt / hidden instruction extraction attempts, direct and indirect (English + French + Arabic)"
+    condition:       "arguments matches '(?i)(ignore\\s+(previous|all|prior)\\s+instructions|reveal\\s+(system\\s+)?prompt|show\\s+(hidden|system|developer|original)\\s+(rules?|instructions?|prompt)|print\\s+your\\s+(system\\s+)?prompt|repeat\\s+(everything|all)\\s+(above|before)|what\\s+are\\s+your\\s+(instructions|rules|directives)|disregard\\s+(all\\s+)?(previous|prior)\\s+(instructions|rules)|you\\s+are\\s+now\\s+(a\\s+)?(different|new|unrestricted)|forget\\s+(your\\s+)?(previous\\s+)?(instructions|training)|bypass\\s+(your\\s+)?(restrictions|guidelines|rules|filters)|act\\s+as\\s+(if\\s+you\\s+(have\\s+no|are\\s+without))|DAN\\s+mode|developer\\s+mode|jailbreak|\\b(internal|hidden)\\b.{0,30}\\b(polic(?:y|ies)|guidelines?|configurations?|governance|behaviors?|rules?)\\b|(r[eè]gles|documents?)\\s+internes?)|(?:أظهر|اكشف|اعرض|أخبرني\\s+عن|ما\\s+هي)\\s*.{0,15}(?:التعليمات|البرومبت|القواعد\\s+المخفية|النظام\\s+الداخلي|تعليماتك|إرشاداتك|البرنامج\\s+الداخلي)|(?:القوانين|القواعد|النظام)\\s*.{0,10}الداخلي'"
+    action:          BLOCK
+    violation_type:  prompt_leakage
+    severity:        critical
+    jurisdiction:    ALL
+
+  # PR-03 ─────
+  # Block destructive SQL keywords AND schema/metadata reconnaissance queries
+  # in database_query arguments. DROP / DELETE / TRUNCATE are write-destructive
+  # operations. SHOW DATABASES / DESCRIBE / information_schema / pg_catalog are
+  # read-only but expose the full schema — a reconnaissance step that always
+  # precedes a targeted exfiltration attempt.
+  # Strategy: DECLINE — attack pattern, no retry path offered.
+  - id:              PR-03
+    description:     "Block destructive SQL keywords and schema-recon queries (SHOW DATABASES, DESCRIBE, information_schema, pg_catalog)"
+    tool:            database_query
+    condition:       "arguments.query matches '\\bDROP\\b|\\bDELETE\\b|\\bTRUNCATE\\b|\\bINSERT\\b|\\bUPDATE\\b|\\bALTER\\b|\\bEXEC\\b|\\bXP_|\\bSHOW\\s+DATABASES\\b|\\bSHOW\\s+TABLES\\b|\\bDESCRIBE\\b|\\bDESC\\s+\\w+|information_schema\\.|pg_catalog\\.'"
+    action:          BLOCK
+    violation_type:  injection
+    severity:        critical
+    jurisdiction:    ALL
+
+  # PR-12 ─────
+  # Block large-scale data exfiltration via bulk database queries or bulk
+  # data requests phrased in natural language through any tool.
+  # Signals: SELECT * (unbounded column fetch), missing/oversized LIMIT
+  # clause on a multi-column projection, UNION SELECT (data stacking),
+  # INTO OUTFILE/DUMPFILE (MySQL file export), pg_read_file / pg_ls_dir
+  # (PostgreSQL filesystem access), information_schema harvesting, and
+  # natural-language "give me the whole database / all records" requests
+  # (English, French, Arabic, Darja).
+  # Note: the multi-column-without-scoping check (bulk_column_export) is
+  # implemented in policy_engine._check_bulk_export(), not purely regex —
+  # a query is only flagged when it selects 2+ explicit columns, has no
+  # WHERE clause, and either omits LIMIT entirely or requests LIMIT > 100.
+  # Strategy: DECLINE — bulk extraction is never a legitimate single-turn action.
+  - id:              PR-12
+    description:     "Block large-scale DB exfiltration — UNION SELECT, INTO OUTFILE, pg_read_file, information_schema harvesting"
+    tool:            database_query
+    condition:       "arguments.query matches '(?i)(UNION\\s+(ALL\\s+)?SELECT|INTO\\s+(OUTFILE|DUMPFILE)|pg_read_file|pg_ls_dir|information_schema\\.(tables|columns|schemata)|LOAD_FILE\\s*\\(|GROUP_CONCAT\\s*\\(|BENCHMARK\\s*\\(|SLEEP\\s*\\()'"
+    action:          BLOCK
+    violation_type:  data_exfiltration
+    severity:        critical
+    jurisdiction:    ALL
+
+  - id:              PR-12
+    description:     "Block 'SELECT * FROM ...' with no LIMIT anywhere in the statement (checks the whole query, not just the text after the match, so a CTE's inner LIMIT correctly bounds the outer SELECT *)"
+    tool:            database_query
+    condition:       "unlimited_select_star"
+    action:          BLOCK
+    violation_type:  data_exfiltration
+    severity:        critical
+    jurisdiction:    ALL
+
+  - id:              PR-12
+    description:     "Block unscoped multi-column database exports (2+ columns, no WHERE, no/oversized LIMIT)"
+    tool:            database_query
+    condition:       "bulk_column_export"
+    action:          BLOCK
+    violation_type:  data_exfiltration
+    severity:        critical
+    jurisdiction:    ALL
+
+  - id:              PR-12
+    description:     "Block natural-language bulk data extraction requests (English/French/Arabic/Darja) via any tool"
+    condition:       "arguments matches '(?i)(قاعدة\\s*بيانات.{0,20}كاملة)|(tou(?:s|tes)\\s+les\\s+(dossiers|comptes|cartes))|(\\bevery\\b.{0,30}\\b(salary|record)s?\\b)|(كامل.{0,20}comptes)'"
+    action:          BLOCK
+    violation_type:  data_exfiltration
+    severity:        critical
+    jurisdiction:    ALL
+
+  # PR-01 ─────
+  # Block access to sensitive business-data categories (payroll, finance,
+  # audit trails, backups) regardless of session role — these resource
+  # categories require an elevated permission tier that most session roles do
+  # not hold. Checked AFTER PR-12 (so an unscoped bulk "SELECT * FROM payroll"
+  # is still correctly attributed to PR-12/data_exfiltration) and BEFORE PR-05
+  # (so a call naming one of these resource categories is attributed to the
+  # specific permission rule rather than the generic role/tool mismatch rule).
+  # Strategy: ASK — agent invites the user to authenticate at a higher tier.
+  - id:              PR-01
+    description:     "Block access to restricted business-data categories (payroll, finance transactions, audit trails, backups) requiring elevated permission"
+    condition:       "arguments matches '(?i)\\bpayroll\\b|\\bfinance_transactions\\b|/srv/audit/|/srv/backups/'"
+    action:          BLOCK
+    violation_type:  permission
+    severity:        high
+    jurisdiction:    ALL
+
+  # PR-05 ─────
+  # Block tool calls for tools outside the session role's approved list.
+  # Each role has a defined capability surface; any call outside it is a
+  # privilege escalation attempt whether accidental or malicious.
+  # Strategy: ASK — agent suggests the tools actually available to this role.
+  - id:              PR-05
+    description:     "Block tool calls not permitted for the current session role"
+    condition:       "tool_name not in role_allowed_tools[session_role]"
+    action:          BLOCK
+    violation_type:  role_violation
+    severity:        high
+    jurisdiction:    ALL
+
+  # PR-09 ─────
+  # Block SSRF (Server-Side Request Forgery) attempts through web-fetching tools.
+  # Targets: loopback (127.x, ::1), link-local (169.254.x.x — AWS metadata),
+  # RFC-1918 private ranges (10.x, 172.16-31.x, 192.168.x), 'localhost', and
+  # internal-only TLDs/hostnames such as '*.local' and '*.internal'.
+  # Applies to: web_fetch, browser, external_request — any tool that makes
+  # outbound HTTP requests on behalf of the agent.
+  # Strategy: DECLINE — internal network probing is always an attack.
+  - id:              PR-09
+    description:     "Block SSRF — requests to localhost, loopback, metadata endpoints, RFC-1918 private IPs, or internal-only hostnames (*.local, *.internal)"
+    tools:
+      - web_fetch
+      - browser
+      - external_request
+      - web_search
+    condition:       "arguments matches '(?i)(localhost|127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|::1|0\\.0\\.0\\.0|169\\.254\\.\\d{1,3}\\.\\d{1,3}|10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|172\\.(1[6-9]|2[0-9]|3[01])\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|metadata\\.google\\.internal|169\\.254\\.169\\.254|fd[0-9a-f]{2}::|fc[0-9a-f]{2}::|\\.local\\b|\\.internal\\b)'"
+    action:          BLOCK
+    violation_type:  ssrf_attempt
+    severity:        critical
+    jurisdiction:    ALL
+
+  # PR-08 (single-call harvest phrasing) ────────────────────────────────
+  # Block single web_search calls that, by their own wording, request
+  # mass/bulk personal-data harvesting ("every phone number", "download
+  # every profile", "enumerate all domain owners") — this is automated-abuse
+  # intent expressed in one call, not just a rate-limit problem.
+  - id:              PR-08
+    description:     "Block single-call bulk personal-data harvesting requests (mass email/phone/profile/domain scraping)"
+    tool:            web_search
+    condition:       "arguments matches '(?i)(\\bthousands\\s+of\\b|\\bevery\\b|\\benumerate\\s+all\\b).{0,40}(\\bemails?\\b|\\bphone\\s+numbers?\\b|\\bprofiles?\\b|\\bdomain\\s+owners?\\b)'"
+    action:          BLOCK
+    violation_type:  abuse
+    severity:        medium
+    jurisdiction:    ALL
+
+
+
+# ROLE → ALLOWED TOOLS MAP
+# Loaded by policy_engine.py  (role_allowed_tools dict)
+#
+# ┌─────────────────┬──────────────────────────────────────────────────────────┐
+# │ Role            │ Allowed tools                                            │
+# ├─────────────────┼──────────────────────────────────────────────────────────┤
+# │ anonymous       │ web_search  translation  calculator                      │
+# │                 │ Read-only, stateless, no auth required.                   │
+# │                 │ database_query / vector_search / python_executor / etc.  │
+# │                 │ are BLOCKED by PR-05 for this role.                      │
+# ├─────────────────┼──────────────────────────────────────────────────────────┤
+# │ authenticated   │ + database_query  vector_search  web_fetch               │
+# │                 │ Proven identity → structured data reads allowed.         │
+# ├─────────────────┼──────────────────────────────────────────────────────────┤
+# │ admin           │ + python_executor  file_read  external_request  browser  │
+# │                 │ Full tool surface; code execution and FS access.          │
+# └─────────────────┴──────────────────────────────────────────────────────────┘
+#
+# FIX (role-sync bug v2): 'anonymous' had accidentally accumulated
+# database_query / vector_search / python_executor from a prior merge —
+# restored to the documented read-only, stateless surface (web_search,
+# translation, calculator only). This was silently over-permissioning
+# unauthenticated sessions and is what PR-05's anonymous test cases exercise.
+
+
+role_allowed_tools:
+
+  # anonymous 
+  # Unauthenticated sessions. Strictly read-only, stateless tools that need
+  # no identity and touch no structured data store or execution sandbox.
+  anonymous:
+    - web_search
+    - translation
+    - calculator
+
+  # authenticated 
+  # Adds structured data reads once identity is established.
+  authenticated:
+    - web_search
+    - translation
+    - calculator
+    - database_query
+    - vector_search
+    - web_fetch
+
+  # admin 
+  # Full tool surface. Includes code execution and file system access.
+  admin:
+    - web_search
+    - translation
+    - calculator
+    - database_query
+    - vector_search
+    - python_executor
+    - file_read
+    - web_fetch
+    - external_request
+    - browser
+
+
+
+# REJECTION STRATEGIES
+# Loaded by src/layer2/rejection_handler.py
+
+#
+# Maps each violation_type to a strategy and the response template fields.
+#
+# strategy values:
+#   decline  — hard stop; no retry path; log and terminate the tool call
+#   ask      — soft stop; agent is instructed to request clarification or
+#              guide the user toward a valid alternative
+#
+# response_key: key into the Arabic response template dict in rejection_handler.py
+# suggest_alternatives: whether to append the role's allowed tool list
+# log_level: severity for the audit logger
+
+
+rejection_strategies:
+
+  permission:
+    strategy:             ask
+    response_key:         permission_ask
+    suggest_alternatives: true
+    log_level:            WARNING
+    rationale: >-
+      The session lacks the required authentication level for this tool
+      or is requesting a restricted business-data category (payroll,
+      finance, audit, backups). The agent should invite the user to log
+      in at a higher tier or use an available tool.
+
+  path_traversal:
+    strategy:             decline
+    response_key:         attack_decline
+    suggest_alternatives: false
+    log_level:            CRITICAL
+    rationale: >-
+      Path traversal is always an attack pattern. No clarification is offered.
+      The request is terminated and the event is logged at CRITICAL level.
+
+  injection:
+    strategy:             decline
+    response_key:         attack_decline
+    suggest_alternatives: false
+    log_level:            CRITICAL
+    rationale: >-
+      SQL injection keywords or schema-reconnaissance queries indicate a
+      destructive or exfiltration attempt. Hard stop with no retry path.
+
+  command_injection:
+    strategy:             decline
+    response_key:         attack_decline
+    suggest_alternatives: false
+    log_level:            CRITICAL
+    rationale: >-
+      OS-level shell commands or native-code escapes in code payloads
+      represent sandbox escape attempts. Hard stop with no retry path.
+
+  role_violation:
+    strategy:             ask
+    response_key:         role_ask
+    suggest_alternatives: true
+    log_level:            WARNING
+    rationale: >-
+      The requested tool is outside the role's approved surface.
+      The agent should list the tools actually available to this session role.
+
+  schema_violation:
+    strategy:             ask
+    response_key:         schema_ask
+    suggest_alternatives: false
+    log_level:            WARNING
+    rationale: >-
+      The payload likely exceeds size limits due to user error, or a script
+      requests an unreasonably large resource allocation.
+      The agent should request the user simplify or split the input.
+
+  privacy_violation:
+    strategy:             decline
+    response_key:         privacy_decline
+    suggest_alternatives: false
+    log_level:            CRITICAL
+    rationale: >-
+      Detected Algerian/Arabic PII (national ID, phone number, name+ID
+      pattern, or a bulk request for identity-document numbers).
+      Data exfiltration attempt — hard stop, no retry path, CRITICAL audit log.
+
+  abuse:
+    strategy:             ask
+    response_key:         rate_limit_ask
+    suggest_alternatives: false
+    log_level:            WARNING
+    rationale: >-
+      The session has exceeded the tool invocation rate limit (20 calls/60 s)
+      or a single call's own wording requests mass/bulk personal-data
+      harvesting. Agent notifies the user and suggests a scoped alternative.
+
+  ssrf_attempt:
+    strategy:             decline
+    response_key:         attack_decline
+    suggest_alternatives: false
+    log_level:            CRITICAL
+    rationale: >-
+      Request targets a loopback address, link-local metadata endpoint,
+      RFC-1918 private range, or internal-only hostname (*.local/*.internal)
+      — classic SSRF indicators. Always an attack.
+      Hard stop, no retry, CRITICAL audit event, flag session for review.
+
+  sensitive_file_access:
+    strategy:             decline
+    response_key:         sensitive_file_decline
+    suggest_alternatives: false
+    log_level:            CRITICAL
+    rationale: >-
+      The requested file path matches a known secrets/credentials pattern
+      (.env, .pem, id_rsa, kubeconfig, bash_history, /private/, etc.). Hard
+      stop — legitimate agent workflows never need raw credential files.
+
+  prompt_leakage:
+    strategy:             decline
+    response_key:         prompt_leakage_decline
+    suggest_alternatives: false
+    log_level:            CRITICAL
+    rationale: >-
+      The request attempts to extract system prompt, hidden instructions, or
+      governance configuration — directly or via an indirect "find documents
+      about the assistant's internal policies" search.
+      Hard stop, flag session, CRITICAL log — no partial response returned.
+
+  data_exfiltration:
+    strategy:             decline
+    response_key:         data_exfiltration_decline
+    suggest_alternatives: false
+    log_level:            CRITICAL
+    rationale: >-
+      Query or request contains bulk extraction patterns (SELECT *, UNION
+      SELECT, INTO OUTFILE, unscoped multi-column export, or a natural-
+      language "give me the whole database" request). Legitimate agent
+      queries are always scoped and bounded. Hard stop, no retry, CRITICAL
+      audit log.
+
+  token_theft:
+    strategy:             decline
+    response_key:         token_theft_decline
+    suggest_alternatives: false
+    log_level:            CRITICAL
+    rationale: >-
+      A plaintext Bearer token, JWT, API key, or credential string was
+      detected in tool arguments. Credential leakage is a critical security
+      event regardless of tool. Hard stop, scrub argument from audit log
+      value field, flag session for immediate security review.
