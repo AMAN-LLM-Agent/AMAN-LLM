@@ -11,7 +11,7 @@
 #
 # Changes vs v1.3.1 (REBUILD, v2.0.0):
 #   [v2.0.0-REBUILD-1] AdversarialAgent backbone AraBERT → MARBERT, following
-#                the 05a/05b/05c ablation (MARBERT beat AraBERT on Unified
+#                the 04a/04b/04c ablation (MARBERT beat AraBERT on Unified
 #                and OSACT-only Macro F1 — see adversarial_detector.py header).
 #
 # Changes vs v2.0.0 (REBUILD, v2.1.0):
