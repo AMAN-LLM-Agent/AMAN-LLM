@@ -1,0 +1,1 @@
+{"event_id": "b0c8b954-a77a-43d6-a48c-4e0750a0b598", "timestamp": "2026-07-16T19:24:06.212434+00:00", "trace_id": "trace_timer", "stage": "llm_call", "status": "PASS", "risk_level": "low", "user_id": "u1", "latency_ms": 100.592, "details": {"tokens": 42}}
